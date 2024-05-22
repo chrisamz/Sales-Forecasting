@@ -1,0 +1,11 @@
+let
+    Source = Csv.Document(File.Contents("C:\path\to\your\processed_data.csv"), [Delimiter=",", Columns=5, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"date", type date}, {"sales", type number}, {"category", type text}, {"economic_indicator", type number}, {"holiday_flag", type number}}),
+    #"Added Year" = Table.AddColumn(#"Changed Type", "Year", each Date.Year([date]), Int64.Type),
+    #"Added Month" = Table.AddColumn(#"Added Year", "Month", each Date.Month([date]), Int64.Type),
+    #"Added Month Name" = Table.AddColumn(#"Added Month", "Month Name", each Date.ToText([date], "MMMM"), type text),
+    #"Added Quarter" = Table.AddColumn(#"Added Month Name", "Quarter", each Date.QuarterOfYear([date]), Int64.Type),
+    #"Added Season" = Table.AddColumn(#"Added Quarter", "Season", each if Date.Month([date]) in {12, 1, 2} then "Winter" else if Date.Month([date]) in {3, 4, 5} then "Spring" else if Date.Month([date]) in {6, 7, 8} then "Summer" else "Fall", type text)
+in
+    #"Added Season"
