@@ -1,0 +1,66 @@
+Total Sales = SUM('SalesData'[sales])
+
+Monthly Sales = 
+CALCULATE(
+    [Total Sales],
+    ALLEXCEPT('SalesData', 'SalesData'[Year], 'SalesData'[Month])
+)
+
+YoY Sales = 
+CALCULATE(
+    [Total Sales],
+    SAMEPERIODLASTYEAR('SalesData'[date])
+)
+
+YoY Growth = 
+DIVIDE(
+    [Total Sales] - [YoY Sales],
+    [YoY Sales],
+    0
+)
+
+Seasonal Sales = 
+CALCULATE(
+    [Total Sales],
+    ALLEXCEPT('SalesData', 'SalesData'[Season])
+)
+
+Sales by Category = 
+SUMMARIZE(
+    'SalesData',
+    'SalesData'[category],
+    "Total Sales", [Total Sales]
+)
+
+Average Sales by Month = 
+AVERAGEX(
+    SUMMARIZE(
+        'SalesData',
+        'SalesData'[Year],
+        'SalesData'[Month],
+        "Monthly Sales", [Monthly Sales]
+    ),
+    [Monthly Sales]
+)
+
+Sales Forecast = 
+VAR LastDate = MAX('SalesData'[date])
+VAR DateAdd = DATEADD('SalesData'[date], 1, MONTH)
+VAR SalesEstimate = 
+    AVERAGEX(
+        DATESINPERIOD('SalesData'[date], LastDate, -12, MONTH),
+        [Total Sales]
+    )
+RETURN SalesEstimate
+
+Sales with Economic Impact = 
+SUMX(
+    'SalesData',
+    'SalesData'[sales] * (1 + 'SalesData'[economic_indicator])
+)
+
+Sales during Holidays = 
+CALCULATE(
+    [Total Sales],
+    'SalesData'[holiday_flag] = 1
+)
